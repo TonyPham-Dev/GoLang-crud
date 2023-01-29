@@ -11,7 +11,8 @@ import (
 
 func main() {
 	var port string = ":8001"
-	client, ctx, context, err := configs.ConnectDatabase("mongodb+srv://TonyPham:Cong2001!@cluster0.daknur6.mongodb.net/?retryWrites=true&w=majority")
+	dbUrl := configs.Getenv("DB_URL")
+	client, ctx, context, err := configs.ConnectDatabase(dbUrl)
 
 	if err != nil {
 		panic(err)

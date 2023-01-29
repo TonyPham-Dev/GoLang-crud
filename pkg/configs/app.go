@@ -3,8 +3,11 @@ package configs
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -34,4 +37,14 @@ func PingDatabases(client *mongo.Client, ctx context.Context) error {
 	}
 	fmt.Println("Connect success database")
 	return nil
+}
+
+// config env
+func Getenv(key string) string {
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		log.Fatal("Cannot loading environment ")
+	}
+	return os.Getenv(key)
 }
