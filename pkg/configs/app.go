@@ -1,16 +1,37 @@
 package configs
 
 import (
-	"fmt"
 	"context"
-	"log"
+	"fmt"
 	"time"
+
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongo.org/mongo-driver/bson"
-	"go.mongo.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-func connect() {
-	client, err := mongo.NewClient(options.Client().ApplyURL(""))
+func CloseDatabase(client *mongo.Client, ctx context.Context, cancel context.CancelFunc) {
+	defer cancel()
+	defer func() {
+		if err := client.Disconnect(ctx); err != nil {
+			panic(err)
+		}
+	}()
+}
 
+func ConnectDatabase(uri string) (*mongo.Client, context.Context, context.CancelFunc, error) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	client, error := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+
+	return client, ctx, cancel, error
+
+}
+
+func PingDatabases(client *mongo.Client, ctx context.Context) error {
+	if err := client.Ping(ctx, readpref.Primary()); err != nil {
+		return err
+	}
+	fmt.Println("Connect success database")
+	return nil
 }
