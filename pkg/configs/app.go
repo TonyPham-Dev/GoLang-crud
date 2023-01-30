@@ -10,33 +10,32 @@ import (
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-func CloseDatabase(client *mongo.Client, ctx context.Context, cancel context.CancelFunc) {
-	defer cancel()
-	defer func() {
-		if err := client.Disconnect(ctx); err != nil {
-			panic(err)
-		}
-	}()
-}
-
-func ConnectDatabase(uri string) (*mongo.Client, context.Context, context.CancelFunc, error) {
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	client, error := mongo.Connect(ctx, options.Client().ApplyURI(uri))
-
-	return client, ctx, cancel, error
-
-}
-
-func PingDatabases(client *mongo.Client, ctx context.Context) error {
-	if err := client.Ping(ctx, readpref.Primary()); err != nil {
-		return err
+func ConnectDatabase() *mongo.Client {
+	client, err := mongo.NewClient(options.Client().ApplyURI(Getenv("DB_URL")))
+	if err != nil {
+		log.Fatal(err)
 	}
-	fmt.Println("Connect success database")
-	return nil
+
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	err = client.Connect(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Connected to MongoDB")
+	return client
+}
+
+var DB *mongo.Client = ConnectDatabase()
+
+func GetConlections(client *mongo.Client, collectionName string) *mongo.Collection {
+	collection := client.Database("db-golang").Collection(collectionName)
+	return collection
 }
 
 // config env
